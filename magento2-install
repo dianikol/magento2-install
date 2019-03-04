@@ -349,7 +349,7 @@ services:
         user: application
         restart: always
         volumes:
-          - "${LOCATION}:/app:cached"
+          - "${LOCATION}/app:/var/www/html"
           - "root-ssh-files:/root/.ssh/"
           - "user-ssh-files:/home/application/.ssh/"
         environment:
