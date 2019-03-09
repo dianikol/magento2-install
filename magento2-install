@@ -4,10 +4,10 @@ MAGENTO_PUBLIC_KEY=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 MAGENTO_PRIVATE_KEY=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 #DEFAULT VALUES
-DEFAULT_SSH_KEY_PATH=~/.ssh/id_rsa
+DEFAULT_SSH_KEY_PATH=~/.ssh/id_rsa_gitlab
 DEFAULT_BASEPATH=~/Websites/Magento2/
-DEFAULT_EDITION=enterprise
-DEFAULT_USE_SAMPLE_DATA=y
+DEFAULT_EDITION=community
+DEFAULT_USE_SAMPLE_DATA=n
 DEFAULT_USE_REDIS=y
 DEFAULT_DOCKER_WEB_IMAGE=webdevops/php-apache-dev:7.1
 DEFAULT_DOCKER_DB_IMAGE=mariadb:10
@@ -322,11 +322,17 @@ createAuthJson() {
 
 createDockerComposeFile() {
 DOCKER_COMPOSE_FILE=$LOCATION/docker-compose.yml
+DOCKERFILE=$LOCATION/Dockerfile
 if [[ -f "$DOCKER_COMPOSE_FILE" ]]; then
     rm $DOCKER_COMPOSE_FILE
 fi
 
+if [[ -f "$DOCKERFILE" ]]; then
+    rm $DOCKERFILE
+fi
+
 touch $DOCKER_COMPOSE_FILE
+touch $DOCKERFILE
 
 DOCKER_SERVICE_PREFIX=$( echo ${DIRNAME} | sed "s/[^a-zA-Z0-9]//g")
 DOCKER_WEB_SERVICE_NAME=web
@@ -340,16 +346,29 @@ DOCKER_REDIS_CONTAINER_NAME=${DOCKER_CONTAINER_PREFIX}_redis
 
 DOCKER_DB_NAME=$( echo ${DIRNAME} | sed "s/[^a-zA-Z0-9]//g")
 
+cat <<EOT >> $DOCKERFILE
+      
+FROM ${DOCKER_WEB_IMAGE}
+
+COPY ./ /app
+
+EOT
+
 cat <<EOT >> $DOCKER_COMPOSE_FILE
 version: '3'
 services:
     ${DOCKER_WEB_SERVICE_NAME}:
-        image: ${DOCKER_WEB_IMAGE}
+        # image: ${DOCKER_WEB_IMAGE}
+        build:
+          context: ${LOCATION}
+          dockerfile: Dockerfile
         container_name: ${DOCKER_WEB_CONTAINER_NAME}
-        user: application
+        user: root
         restart: always
         volumes:
-          - "${LOCATION}/app:/var/www/html"
+          - "${LOCATION}/app:/app/app:cached"
+          - "${LOCATION}/composer.json:/var/www/magento/composer.json:cached"
+          - "${LOCATION}/composer.lock:/var/www/magento/composer.lock:cached"
           - "root-ssh-files:/root/.ssh/"
           - "user-ssh-files:/home/application/.ssh/"
         environment:
@@ -386,7 +405,7 @@ cat <<EOT >> $DOCKER_COMPOSE_FILE
         container_name: ${DOCKER_DB_CONTAINER_NAME}
         restart: always
         volumes:
-          - db-data:/var/lib/mysql
+          - ${LOCATION}/db-data:/var/lib/mysql:delegated
         environment:
           - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
           - MYSQL_DATABASE=${DOCKER_DB_NAME}
@@ -407,7 +426,7 @@ cat <<EOT >> $DOCKER_COMPOSE_FILE
         ports:
           - "6379:6379"
         volumes:
-          - redis-data:/data
+          - ${LOCATION}/redis-data:/data
 EOT
 fi
 
@@ -496,6 +515,7 @@ installMagento() {
 
     docker exec $DOCKER_WEB_CONTAINER_NAME /bin/bash -c "$MAGENTO_INSTALL_COMMAND"
     docker exec $DOCKER_WEB_CONTAINER_NAME /bin/bash -c "php /app/bin/magento deploy:mode:set developer"
+    docker exec $DOCKER_WEB_CONTAINER_NAME /bin/bash -c "chmod -R 777 /app/pub/static/ /app/pub/media/ /app/var/ /app/generated/"
 }
 
 handleSuccess() {
@@ -516,7 +536,7 @@ printf "${BOLD}Password:${NORMAL} $DB_PASSWORD \n"
 printf "\n"
 printf "${GREEN}${BOLD}Xdebug${NORMAL}${RESET} \n"
 printf "${BOLD}Port:${NORMAL} 9000 \n"
-printf "${BOLD}IDE Key:${NORMAL} MAGENTO \n"
+printf "${BOLD}IDE Key:${NORMAL} PHPSTORM \n"
 printf "\n"
 printf "In order to allow Xdebug to route back to the host machine, we created a loopback network by running this command: ${BOLD}ifconfig lo0 alias 10.200.10.1/24${NORMAL} \n"
 printf "If you restart your computer, you will need to run that command again for Xdebug to work. It is most convenient to create an alias in your ~/.bash_profile so that you can simply type a command to run it again."
