@@ -448,6 +448,132 @@ EOT
 fi
 }
 
+createEnvUp() {
+DOCKER_ENV_UP=$LOCATION/env-up
+
+cat <<EOT >> $DOCKER_ENV_UP
+#!/usr/bin/env bash
+
+#test=''
+
+# read -e -p "Which version of Magento do you want to spin up? (2.2.6, for example) " test
+
+echo "Spin up the environment..."
+docker-compose up -d
+
+echo "Syncing /app/app"
+docker cp $LOCATION/app $DOCKER_WEB_CONTAINER_NAME:/app
+
+echo "Syncing /app/vendor"
+docker cp $LOCATION/vendor $DOCKER_WEB_CONTAINER_NAME:/app
+
+echo "Syncing /app/var"
+docker cp $LOCATION/var $DOCKER_WEB_CONTAINER_NAME:/app
+
+echo "Syncing /app/update"
+docker cp $LOCATION/update $DOCKER_WEB_CONTAINER_NAME:/app
+
+echo "Syncing /app/setup"
+docker cp $LOCATION/setup $DOCKER_WEB_CONTAINER_NAME:/app
+
+echo "Syncing /app/pub"
+docker cp $LOCATION/pub $DOCKER_WEB_CONTAINER_NAME:/app
+
+echo "Syncing /app/phpserver"
+docker cp $LOCATION/phpserver $DOCKER_WEB_CONTAINER_NAME:/app
+
+echo "Syncing /app/lib"
+docker cp $LOCATION/lib $DOCKER_WEB_CONTAINER_NAME:/app
+
+echo "Syncing /app/generated"
+docker cp $LOCATION/generated $DOCKER_WEB_CONTAINER_NAME:/app
+
+echo "Syncing /app/dev"
+docker cp $LOCATION/dev $DOCKER_WEB_CONTAINER_NAME:/app
+
+echo "Syncing /app/bin"
+docker cp $LOCATION/bin $DOCKER_WEB_CONTAINER_NAME:/app
+
+echo "Syncing /app/app"
+docker cp $LOCATION/app $DOCKER_WEB_CONTAINER_NAME:/app
+
+echo "Syncing /app/auth.json"
+docker cp $LOCATION/auth.json $DOCKER_WEB_CONTAINER_NAME:/app
+
+echo "Syncing /app/index.php"
+docker cp $LOCATION/index.php $DOCKER_WEB_CONTAINER_NAME:/app
+
+echo "Syncing /app/composer.json"
+docker cp $LOCATION/composer.json $DOCKER_WEB_CONTAINER_NAME:/app
+
+echo "Syncing /app/composer.lock"
+docker cp $LOCATION/composer.lock $DOCKER_WEB_CONTAINER_NAME:/app
+
+echo "Remove cache folders"
+docker exec $DOCKER_WEB_CONTAINER_NAME bash -c "rm -rf rm -rf /app/var/di/ /app/var/generation/ /app/var/cache/ /app/var/log/ /app/var/page_cache/* /app/generated/*"
+docker exec $DOCKER_WEB_CONTAINER_NAME bash -c "chmod -R 777 /app/pub/static/ /app/pub/media/ /app/var/ /app/generated/"
+EOT
+}
+
+createEnvDown() {
+DOCKER_ENV_DOWN=$LOCATION/env-down
+
+cat <<EOT >> $DOCKER_ENV_DOWN
+#!/usr/bin/env bash
+
+echo "Syncing /app/app"
+docker cp $DOCKER_WEB_CONTAINER_NAME:/app/app $LOCATION/
+
+echo "Syncing /app/vendor"
+docker cp $DOCKER_WEB_CONTAINER_NAME:/app/vendor $LOCATION/
+
+echo "Syncing /app/var"
+docker cp $DOCKER_WEB_CONTAINER_NAME:/app/var $LOCATION/
+
+echo "Syncing /app/update"
+docker cp $DOCKER_WEB_CONTAINER_NAME:/app/update $LOCATION/
+
+echo "Syncing /app/setup"
+docker cp $DOCKER_WEB_CONTAINER_NAME:/app/setup $LOCATION/
+
+echo "Syncing /app/pub"
+docker cp $DOCKER_WEB_CONTAINER_NAME:/app/pub $LOCATION/
+
+echo "Syncing /app/phpserver"
+docker cp $DOCKER_WEB_CONTAINER_NAME:/app/phpserver $LOCATION/
+
+echo "Syncing /app/lib"
+docker cp $DOCKER_WEB_CONTAINER_NAME:/app/lib $LOCATION/
+
+echo "Syncing /app/generated"
+docker cp $DOCKER_WEB_CONTAINER_NAME:/app/generated $LOCATION/
+
+echo "Syncing /app/dev"
+docker cp $DOCKER_WEB_CONTAINER_NAME:/app/dev $LOCATION/
+
+echo "Syncing /app/bin"
+docker cp $DOCKER_WEB_CONTAINER_NAME:/app/bin $LOCATION/
+
+echo "Syncing /app/app"
+docker cp $DOCKER_WEB_CONTAINER_NAME:/app/app $LOCATION/
+
+echo "Syncing /app/auth.json"
+docker cp $DOCKER_WEB_CONTAINER_NAME:/app/auth.json $LOCATION/
+
+echo "Syncing /app/index.php"
+docker cp $DOCKER_WEB_CONTAINER_NAME:/app/index.php $LOCATION/
+
+echo "Syncing /app/composer.json"
+docker cp $DOCKER_WEB_CONTAINER_NAME:/app/composer.json $LOCATION/
+
+echo "Syncing /app/composer.lock"
+docker cp $DOCKER_WEB_CONTAINER_NAME:/app/composer.lock $LOCATION/
+
+echo "Shutting down the environment.."
+docker-compose down
+EOT
+}
+
 createDockerContainers() {
     docker-compose -f $DOCKER_COMPOSE_FILE up -d --build
     docker exec -uroot $DOCKER_WEB_CONTAINER_NAME /bin/bash -c "mkdir -p ~/.ssh"
@@ -578,4 +704,6 @@ createAuthJson
 createDockerComposeFile
 createDockerContainers || handleError
 installMagento || handleError
+createEnvUp
+createEnvDown
 handleSuccess
