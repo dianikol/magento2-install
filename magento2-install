@@ -494,9 +494,6 @@ docker cp $LOCATION/dev $DOCKER_WEB_CONTAINER_NAME:/app
 echo "Syncing /app/bin"
 docker cp $LOCATION/bin $DOCKER_WEB_CONTAINER_NAME:/app
 
-echo "Syncing /app/app"
-docker cp $LOCATION/app $DOCKER_WEB_CONTAINER_NAME:/app
-
 echo "Syncing /app/auth.json"
 docker cp $LOCATION/auth.json $DOCKER_WEB_CONTAINER_NAME:/app
 
@@ -553,9 +550,6 @@ docker cp $DOCKER_WEB_CONTAINER_NAME:/app/dev $LOCATION/
 
 echo "Syncing /app/bin"
 docker cp $DOCKER_WEB_CONTAINER_NAME:/app/bin $LOCATION/
-
-echo "Syncing /app/app"
-docker cp $DOCKER_WEB_CONTAINER_NAME:/app/app $LOCATION/
 
 echo "Syncing /app/auth.json"
 docker cp $DOCKER_WEB_CONTAINER_NAME:/app/auth.json $LOCATION/
