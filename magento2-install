@@ -367,8 +367,8 @@ services:
         restart: always
         volumes:
           - "${LOCATION}/app:/app/app:cached"
-          - "${LOCATION}/composer.json:/var/www/magento/composer.json:cached"
-          - "${LOCATION}/composer.lock:/var/www/magento/composer.lock:cached"
+          - "${LOCATION}/composer.json:/app/composer.json:cached"
+          - "${LOCATION}/composer.lock:/app/composer.lock:cached"
           - "root-ssh-files:/root/.ssh/"
           - "user-ssh-files:/home/application/.ssh/"
         environment:
