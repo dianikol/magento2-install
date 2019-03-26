@@ -387,6 +387,7 @@ services:
           - php.xdebug.remote_enable=1
           - php.xdebug.idekey=PHPSTORM
         ports:
+          - "80:80"
           - "443:443"
           - "32834:22"
         links:
