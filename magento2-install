@@ -500,11 +500,14 @@ docker cp $LOCATION/auth.json $DOCKER_WEB_CONTAINER_NAME:/app
 echo "Syncing /app/index.php"
 docker cp $LOCATION/index.php $DOCKER_WEB_CONTAINER_NAME:/app
 
-echo "Syncing /app/composer.json"
-docker cp $LOCATION/composer.json $DOCKER_WEB_CONTAINER_NAME:/app
+echo "Syncing /app/.gitignore"
+docker cp $LOCATION/.gitignore $DOCKER_WEB_CONTAINER_NAME:/app
 
-echo "Syncing /app/composer.lock"
-docker cp $LOCATION/composer.lock $DOCKER_WEB_CONTAINER_NAME:/app
+#echo "Syncing /app/composer.json"
+#docker cp $LOCATION/composer.json $DOCKER_WEB_CONTAINER_NAME:/app
+
+#echo "Syncing /app/composer.lock"
+#docker cp $LOCATION/composer.lock $DOCKER_WEB_CONTAINER_NAME:/app
 
 echo "Remove cache folders"
 docker exec $DOCKER_WEB_CONTAINER_NAME bash -c "rm -rf rm -rf /app/var/di/ /app/var/generation/ /app/var/cache/ /app/var/log/ /app/var/page_cache/* /app/generated/*"
@@ -557,11 +560,11 @@ docker cp $DOCKER_WEB_CONTAINER_NAME:/app/auth.json $LOCATION/
 echo "Syncing /app/index.php"
 docker cp $DOCKER_WEB_CONTAINER_NAME:/app/index.php $LOCATION/
 
-echo "Syncing /app/composer.json"
-docker cp $DOCKER_WEB_CONTAINER_NAME:/app/composer.json $LOCATION/
+#echo "Syncing /app/composer.json"
+#docker cp $DOCKER_WEB_CONTAINER_NAME:/app/composer.json $LOCATION/
 
-echo "Syncing /app/composer.lock"
-docker cp $DOCKER_WEB_CONTAINER_NAME:/app/composer.lock $LOCATION/
+#echo "Syncing /app/composer.lock"
+#docker cp $DOCKER_WEB_CONTAINER_NAME:/app/composer.lock $LOCATION/
 
 echo "Shutting down the environment.."
 docker-compose down
