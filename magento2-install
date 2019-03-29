@@ -18,6 +18,7 @@ DEFAULT_DB_USERNAME=root
 DEFAULT_DB_PASSWORD=root
 DEFAULT_DB_PORT=33067
 
+
 #TEXT
 RED=`tput setaf 1`
 GREEN=`tput setaf 2`
@@ -367,6 +368,7 @@ services:
         restart: always
         volumes:
           - "${LOCATION}/app:/app/app:cached"
+          - "${LOCATION}/generated:/app/generated:cached"
           - "${LOCATION}/composer.json:/app/composer.json:cached"
           - "${LOCATION}/composer.lock:/app/composer.lock:cached"
           - "root-ssh-files:/root/.ssh/"
@@ -486,8 +488,8 @@ docker cp $LOCATION/phpserver $DOCKER_WEB_CONTAINER_NAME:/app
 echo "Syncing /app/lib"
 docker cp $LOCATION/lib $DOCKER_WEB_CONTAINER_NAME:/app
 
-echo "Syncing /app/generated"
-docker cp $LOCATION/generated $DOCKER_WEB_CONTAINER_NAME:/app
+#echo "Syncing /app/generated"
+#docker cp $LOCATION/generated $DOCKER_WEB_CONTAINER_NAME:/app
 
 echo "Syncing /app/dev"
 docker cp $LOCATION/dev $DOCKER_WEB_CONTAINER_NAME:/app
@@ -546,8 +548,8 @@ docker cp $DOCKER_WEB_CONTAINER_NAME:/app/phpserver $LOCATION/
 echo "Syncing /app/lib"
 docker cp $DOCKER_WEB_CONTAINER_NAME:/app/lib $LOCATION/
 
-echo "Syncing /app/generated"
-docker cp $DOCKER_WEB_CONTAINER_NAME:/app/generated $LOCATION/
+#echo "Syncing /app/generated"
+#docker cp $DOCKER_WEB_CONTAINER_NAME:/app/generated $LOCATION/
 
 echo "Syncing /app/dev"
 docker cp $DOCKER_WEB_CONTAINER_NAME:/app/dev $LOCATION/
