@@ -18,7 +18,6 @@ DEFAULT_DB_USERNAME=root
 DEFAULT_DB_PASSWORD=root
 DEFAULT_DB_PORT=33067
 
-
 #TEXT
 RED=`tput setaf 1`
 GREEN=`tput setaf 2`
@@ -409,6 +408,7 @@ cat <<EOT >> $DOCKER_COMPOSE_FILE
         restart: always
         volumes:
           - ${LOCATION}/db-data:/var/lib/mysql:delegated
+          - ${LOCATION}/db-config-file.cnf:/etc/mysql/conf.d/db-config-file.cnf
         environment:
           - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
           - MYSQL_DATABASE=${DOCKER_DB_NAME}
@@ -449,6 +449,8 @@ cat <<EOT >> $DOCKER_COMPOSE_FILE
         external: false
 EOT
 fi
+
+cp $LOCATION/docker-compose.yml $LOCATION/docker-compose.sample.yml
 }
 
 createEnvUp() {
@@ -464,8 +466,8 @@ cat <<EOT >> $DOCKER_ENV_UP
 echo "Spin up the environment..."
 docker-compose up -d
 
-echo "Syncing /app/app"
-docker cp $LOCATION/app $DOCKER_WEB_CONTAINER_NAME:/app
+#echo "Syncing /app/app"
+#docker cp $LOCATION/app $DOCKER_WEB_CONTAINER_NAME:/app
 
 echo "Syncing /app/vendor"
 docker cp $LOCATION/vendor $DOCKER_WEB_CONTAINER_NAME:/app
@@ -516,6 +518,9 @@ echo "Remove cache folders"
 docker exec $DOCKER_WEB_CONTAINER_NAME bash -c "rm -rf rm -rf /app/var/di/ /app/var/generation/ /app/var/cache/ /app/var/log/ /app/var/page_cache/* /app/generated/*"
 docker exec $DOCKER_WEB_CONTAINER_NAME bash -c "chmod -R 777 /app/pub/static/ /app/pub/media/ /app/var/ /app/generated/"
 EOT
+
+cp $LOCATION/env-up $LOCATION/env-up.sample
+
 }
 
 createEnvDown() {
@@ -524,8 +529,8 @@ DOCKER_ENV_DOWN=$LOCATION/env-down
 cat <<EOT >> $DOCKER_ENV_DOWN
 #!/usr/bin/env bash
 
-echo "Syncing /app/app"
-docker cp $DOCKER_WEB_CONTAINER_NAME:/app/app $LOCATION/
+#echo "Syncing /app/app"
+#docker cp $DOCKER_WEB_CONTAINER_NAME:/app/app $LOCATION/
 
 echo "Syncing /app/vendor"
 docker cp $DOCKER_WEB_CONTAINER_NAME:/app/vendor $LOCATION/
@@ -572,6 +577,24 @@ docker cp $DOCKER_WEB_CONTAINER_NAME:/app/index.php $LOCATION/
 echo "Shutting down the environment.."
 docker-compose down
 EOT
+
+cp $LOCATION/env-down $LOCATION/env-down.sample
+}
+
+createDBCnf() {
+DB_CNF=$LOCATION/db-config-file.cnf
+
+touch $DB_CNF
+
+cat <<EOT >> $DB_CNF
+[mysqld]
+innodb_ft_min_token_size=2
+ft_min_word_len=2
+EOT
+}
+
+createMagentoSampleEnv() {
+cp $LOCATION/app/etc/env.php $LOCATION/app/etc/env.sample.php 
 }
 
 createDockerContainers() {
@@ -701,9 +724,11 @@ setDockerRedisImage
 addDomainNameToHostsFile
 downloadMagentoFiles || handleError
 createAuthJson
+createDBCnf
 createDockerComposeFile
 createDockerContainers || handleError
 installMagento || handleError
 createEnvUp
 createEnvDown
+createMagentoSampleEnv
 handleSuccess
