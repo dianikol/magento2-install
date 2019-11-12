@@ -8,7 +8,8 @@ This command allows you to easily spin up unlimited instances of any version Mag
 1. Download the magento2-install file
 2. Move the file to /usr/local/bin/magento2-install `mv ./magento2-install /usr/local/bin`
 3. Open the file in the text editor of your choice `open -a TextEdit /usr/local/bin/magento2-install`
-4. Replace lines 3 & 4 with your Magento repository access keys. These will be needed to download Magento
+4. Replace lines 3 & 4 with your Magento repository access keys. These will be needed to download Magento https://marketplace.magento.com/customer/accessKeys/
+
 5. Save your changes and close the file
 6. Open a new terminal window
 7. Issue command `magento2-install`
