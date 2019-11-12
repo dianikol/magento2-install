@@ -343,6 +343,7 @@ DOCKER_CONTAINER_PREFIX=$( echo ${DIRNAME} | sed "s/[^a-zA-Z0-9]//g")
 DOCKER_WEB_CONTAINER_NAME=${DOCKER_CONTAINER_PREFIX}_web
 DOCKER_DB_CONTAINER_NAME=${DOCKER_CONTAINER_PREFIX}_mysql
 DOCKER_REDIS_CONTAINER_NAME=${DOCKER_CONTAINER_PREFIX}_redis
+DOCKER_mail_CONTAINER_NAME=${DOCKER_CONTAINER_PREFIX}_mail
 
 DOCKER_DB_NAME=$( echo ${DIRNAME} | sed "s/[^a-zA-Z0-9]//g")
 
@@ -351,6 +352,17 @@ cat <<EOT >> $DOCKERFILE
 FROM ${DOCKER_WEB_IMAGE}
 
 COPY ./ /app
+
+# sendmail config
+############################################
+
+RUN apt-get update &&\
+    apt-get install --no-install-recommends --assume-yes --quiet ca-certificates curl git &&\
+    rm -rf /var/lib/apt/lists/*
+RUN curl -Lsf 'https://storage.googleapis.com/golang/go1.8.3.linux-amd64.tar.gz' | tar -C '/usr/local' -xvzf -
+ENV PATH /usr/local/go/bin:$PATH
+RUN go get github.com/mailhog/mhsendmail
+RUN cp /root/go/bin/mhsendmail /usr/bin/mhsendmail
 
 EOT
 
@@ -381,6 +393,7 @@ services:
           - PHP_MAX_EXECUTION_TIME=300
           - PHP_POST_MAX_SIZE=500M
           - PHP_UPLOAD_MAX_FILESIZE=1024M
+          - PHP_SENDMAIL_PATH='/usr/bin/mhsendmail --smtp-addr mailhog:1025'          
           - PHP_DEBUGGER=xdebug
           - XDEBUG_REMOTE_CONNECT_BACK=0
           - XDEBUG_REMOTE_HOST=192.168.1.32
@@ -418,6 +431,15 @@ cat <<EOT >> $DOCKER_COMPOSE_FILE
             '--wait_timeout=28800',
             '--max_allowed_packet=32505856'
         ]
+EOT
+
+cat <<EOT >> $DOCKER_COMPOSE_FILE
+    ${DOCKER_MAIL_CONTAINER_NAME}:
+        image: mailhog/mailhog:v1.0.0
+        container_name: ${DOCKER_MAIL_CONTAINER_NAME}        
+        ports:
+          - "1025:1025"
+          - "8025:8025"
 EOT
 
 if [[ "$USE_REDIS" == 1 ]]; then
