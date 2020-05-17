@@ -1,0 +1,51 @@
+Step 1: Backup your store
+Creating backups for your Magento 2 site is so urgent and necessary that you can protect all data from the disappearance through Backup Management if there is any change or break on the site. Follow this guide to backup your Magento 2 store.
+
+Step 2: Turn on maintenance mode
+You should put your store in maintenance mode while upgrading. To enable maintenance mode:
+
+php bin/magento maintenance:enable
+It will create a new file var/.maintenance.flag. If you cannot disable maintenance mode, you can remove this file [Remmember!]
+
+Step 3: Upgrade to Magento 2
+In this case, I will upgrade to Magento version 2.2.1. See latest releases at Download page, Github releases
+
+Step 3.1 Pull package
+Using the following command on terminal/command-prompt firstly:
+
+composer require magento/product-community-edition 2.2.1 --no-update
+composer update
+You may be asked for username and password like this:
+
+authentication keys To generate Public/Private Key pair please read this
+
+Step 3.2 Flush cache
+Now time to remove cache, generation. Run the following command line at root folder:
+
+rm -rf var/cache/*
+rm -rf var/page_cache/*
+rm -rf var/generation/*
+Notes:
+You may install Memcached, Redis cache…, you should flush those caches manually.
+Step 3.3 Run Upgrade Magento
+Run upgrade module, database schema
+
+php bin/magento setup:upgrade
+Step 3.4 Run complie, reindex
+You should run compile and reindex for better performance after upgrading.
+
+php bin/magento setup:di:compile
+php bin/magento indexer:reindex
+Notes:
+In Ubuntu/Debian Linux, when you meet the permission issues, remember to insert sudo at the beginning of every command like sudo composer update.
+Step 3.5 Disable maintenance mode
+You have turn on maintenance mode in the step 2, now you have to turn it off. Run the following command line to turn it off:
+
+php bin/magento maintenance:disable
+Step 4: Check the current Magento 2’s version
+Next, you can check the Magento 2’s version by running the command.
+
+php bin/magento --version
+If the system show the cache write permission error, please add the following command to give write permission to pub and var directories:
+
+chmod -R 777 pub var
